@@ -62,8 +62,21 @@
 
   }
 
+  function dismiss(el) {
+    el.remove()
+  }
+
+
   function createPopover(sources) {
     cleanup();
+
+    var style = document.createElement('style');
+    style.type = 'text/css';
+    style.innerHTML = `.svg-crowbar-box:hover{ background: rgba(255,0,0,.1);}`;
+    document.getElementsByTagName('head')[0].appendChild(style);
+
+   
+
 
     sources.forEach(function(s1) {
       sources.forEach(function(s2) {
@@ -75,6 +88,7 @@
         }
       });
     });
+
 
     var buttonsContainer = document.createElement("div");
     body.appendChild(buttonsContainer);
@@ -98,36 +112,82 @@
     background.style["width"] = "100%";
     background.style["height"] = "100%";
 
+    var closeAllButton = document.createElement("button");
+      
+    
+    // button.style["width"] = "150px";
+    closeAllButton.style["padding"] = "10px";
+    closeAllButton.style["font-size"] = "12px";
+    closeAllButton.style["line-height"] = "1.4em";
+    closeAllButton.style["float"] = "left";
+    closeAllButton.style["borderRadius"] = "4";
+    closeAllButton.style["margin"] = "5px 0 0 5px";
+    closeAllButton.textContent = "Close All";
+    
+    closeAllButton.onclick = function(el) {
+      // console.log(el, d, i, sources)
+      console.log('Close All');
+      cleanup()
+    };
+
+    background.appendChild(closeAllButton);
+  
+
+
     sources.forEach(function(d, i) {
       var buttonWrapper = document.createElement("div");
       buttonsContainer.appendChild(buttonWrapper);
-      buttonWrapper.setAttribute("class", "svg-crowbar");
+      buttonWrapper.setAttribute("class", "svg-crowbar svg-crowbar-box");
       buttonWrapper.style["position"] = "absolute";
       buttonWrapper.style["top"] = (d.top + document.body.scrollTop) + "px";
       buttonWrapper.style["left"] = (document.body.scrollLeft + d.left) + "px";
+
+      buttonWrapper.style["width"] = `${d.width}px`
+      buttonWrapper.style["height"] = `${d.height}px`
+
       buttonWrapper.style["padding"] = "4px";
       buttonWrapper.style["border-radius"] = "3px";
       buttonWrapper.style["color"] = "white";
+      buttonWrapper.style["border"] = "2px solid magenta";
       buttonWrapper.style["text-align"] = "center";
       buttonWrapper.style["font-family"] = "'Helvetica Neue'";
-      buttonWrapper.style["background"] = "rgba(0, 0, 0, 0.8)";
-      buttonWrapper.style["box-shadow"] = "0px 4px 18px rgba(0, 0, 0, 0.4)";
-      buttonWrapper.style["cursor"] = "move";
-      buttonWrapper.textContent =  "SVG #" + i + ": " + (d.id ? "#" + d.id : "") + (d.class ? "." + d.class : "");
+      buttonWrapper.style["box-shadow"] = "0px 4px 18px rgba(0, 0, 0, 0.15)";
+      // buttonWrapper.style["cursor"] = "move";
+      // buttonWrapper.textContent =  "SVG #" + i + ": " + (d.id ? "#" + d.id : "") + (d.class ? "." + d.class : "");
 
       var button = document.createElement("button");
       buttonWrapper.appendChild(button);
       button.setAttribute("data-source-id", i);
-      button.style["width"] = "150px";
+      // button.style["width"] = "150px";
+      button.style["padding"] = "10px";
       button.style["font-size"] = "12px";
       button.style["line-height"] = "1.4em";
-      button.style["margin"] = "5px 0 0 0";
+      button.style["float"] = "left";
+      button.style["borderRadius"] = "4";
+      button.style["margin"] = "5px 0 0 5px";
       button.textContent = "Download";
-
       button.onclick = function(el) {
         // console.log(el, d, i, sources)
         download(d);
       };
+
+
+      var closeButton = document.createElement("button");
+      buttonWrapper.appendChild(closeButton);
+      // closeButton.setAttribute("data-source-id", i);
+      // button.style["width"] = "150px";
+      closeButton.style["padding"] = "10px";
+      closeButton.style["borderRadius"] = "4";
+      closeButton.style["font-size"] = "12px";
+      closeButton.style["line-height"] = "1.4em";
+      closeButton.style["float"] = "left";
+      closeButton.style["margin"] = "5px 0 0 5px";
+      closeButton.textContent = "Close";
+      closeButton.onclick = function(el) {
+        // console.log(el, d, i, sources)
+        dismiss(buttonWrapper);
+      };
+      
 
     });
 
@@ -139,6 +199,13 @@
     [].forEach.call(crowbarElements, function(el) {
       el.parentNode.removeChild(el);
     });
+  }
+
+  function offset(el) {
+    var rect = el.getBoundingClientRect(),
+    scrollLeft = window.pageXOffset || document.documentElement.scrollLeft,
+    scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    return { top: rect.top + scrollTop, left: rect.left + scrollLeft }
   }
 
 
@@ -167,9 +234,11 @@
 
       var source = (new XMLSerializer()).serializeToString(svg);
       var rect = svg.getBoundingClientRect();
+      var elementOffset = offset(svg);
+
       svgInfo.push({
-        top: rect.top,
-        left: rect.left,
+        top: elementOffset.top,
+        left: elementOffset.left,
         width: rect.width,
         height: rect.height,
         class: svg.getAttribute("class"),
